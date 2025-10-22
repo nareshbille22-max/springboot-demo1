@@ -1,14 +1,14 @@
-# Use an official OpenJDK 17 image as the base
-FROM openjdk:17-jdk-slim
-
-# Set the working directory inside the container
+# Stage 1: Build the jar
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy the jar file from your local target folder to the container
-COPY target/springboot-demo-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose port 8080 (Render detects this automatically)
+# Stage 2: Run the jar
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Run the jar file
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
